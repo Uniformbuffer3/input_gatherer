@@ -10,3 +10,4 @@ edition = "2018"
 smithay = { git = "https://github.com/Smithay/smithay" , features=["backend_libinput","backend_session_logind","backend_udev"], default-features = false}
 input = { version = "0.5.0", features = ["udev"] }
 xkbcommon = "*"
+regex = "*"
