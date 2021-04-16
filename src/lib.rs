@@ -15,58 +15,57 @@ use xkbcommon::xkb;
 This structure initialize the xkb components to decode key strokes to an abstract xkb representation,
 making possible to handle multiple keyboards layouts.
 */
-pub struct KeyboadDecoder {
+pub struct KeyboardDecoder {
     context: xkb::Context,
     keymap: xkb::Keymap,
     state: xkb::State,
 }
-impl KeyboadDecoder {
-    fn detect_keyboard_layout_from_env()->Result<String,()>{
-        for (var,value) in std::env::vars()
-        {
-            if var == "XKB_DEFAULT_LAYOUT" {return Ok(value);}
+impl KeyboardDecoder {
+    fn detect_keyboard_layout_from_env() -> Result<String, ()> {
+        for (var, value) in std::env::vars() {
+            if var == "XKB_DEFAULT_LAYOUT" {
+                return Ok(value);
+            }
         }
         Err(())
     }
 
-    fn detect_keyboard_layout_from_file()->Result<String,()>{
+    fn detect_keyboard_layout_from_file() -> Result<String, ()> {
         let regex = regex::Regex::new(r"\s*XKBLAYOUT\s*=(.+)").unwrap();
 
         let file_data = std::fs::read_to_string("/etc/default/keyboard").unwrap();
-        for line in file_data.lines()
-        {
-            match regex.captures(line) {
-                Some(capture)=>{return Ok(capture.get(1).unwrap().as_str().to_string());}
-                None=>{}
+        for line in file_data.lines() {
+            if let Some(capture) = regex.captures(line) {
+                return Ok(capture.get(1).unwrap().as_str().to_string());
             };
         }
-
-        return Err(());
+        Err(())
     }
 
-    fn detect_keyboard_layout()->Result<String,()>{
-
+    fn detect_keyboard_layout() -> Result<String, ()> {
         //Try to detect from env
-        match Self::detect_keyboard_layout_from_env(){
-            Ok(layout)=>return Ok(layout),
-            Err(_)=>{}
+        if let Ok(layout) = Self::detect_keyboard_layout_from_env() {
+            return Ok(layout);
         }
 
         //Try to detect from file
-        match Self::detect_keyboard_layout_from_file(){
-            Ok(layout)=>return Ok(layout),
-            Err(_)=>{}
+        if let Ok(layout) = Self::detect_keyboard_layout_from_file() {
+            return Ok(layout);
         }
-        return Err(());
+        Err(())
     }
 
     pub fn new() -> Self {
         // Initializing the xkb context with no flags
         let context = xkb::Context::new(0);
 
-        let keyboard_layout = match Self::detect_keyboard_layout(){
-            Ok(keyboard_layout)=>{println!("Detected layout: {}",&keyboard_layout);keyboard_layout}
-            Err(_)=>String::from("")
+        // Detecting keyboard layout
+        let keyboard_layout = match Self::detect_keyboard_layout() {
+            Ok(keyboard_layout) => {
+                println!("Detected layout: {}", &keyboard_layout);
+                keyboard_layout
+            }
+            Err(_) => String::from(""),
         };
 
         // Initializing the keymap using empty values ("").
@@ -80,7 +79,7 @@ impl KeyboadDecoder {
         Self {
             context,
             keymap,
-            state
+            state,
         }
     }
     /// This function will decode the key into an abstract xkb representation (Keysym).
@@ -91,6 +90,12 @@ impl KeyboadDecoder {
     }
     pub fn decode_as_chars(&self, keycode: u32) -> Vec<char> {
         self.state.key_get_utf8(keycode + 8).chars().collect()
+    }
+}
+
+impl Default for KeyboardDecoder {
+    fn default() -> Self {
+        Self::new()
     }
 }
 
@@ -128,6 +133,11 @@ impl std::ops::DerefMut for InputGatherer {
         &mut self.0
     }
 }
+impl Default for InputGatherer {
+    fn default() -> Self {
+        Self::new()
+    }
+}
 
 #[test]
 fn test_gatherer() {
@@ -138,7 +148,7 @@ fn test_gatherer() {
     //Creating the gatherer
     let mut gatherer = InputGatherer::new();
     //Creating the keyboard decoder
-    let keyboard_decoder = KeyboadDecoder::new();
+    let keyboard_decoder = KeyboardDecoder::new();
 
     let start = std::time::Instant::now();
     let mut running = true;
@@ -156,20 +166,12 @@ fn test_gatherer() {
                     println!("Seat removed: {:#?}", seat);
                 }
                 InputEvent::Keyboard { seat: _, event } => {
-                    //Decoding keys
+                    //Decoding keys into chars
                     for key in keyboard_decoder.decode_as_chars(event.key()) {
-                        println!("{}",key);
-                        /*
-                        match *key {
-                            keysyms::KEY_Escape => {
-                                println!("Esc pressed, early exit");
-                                running = false;
-                            }
-                            _ => {}
-                        }
-                        */
+                        println!("{}", key);
                     }
-                    /*
+
+                    //Decoding keys into keysym
                     for key in keyboard_decoder.decode_as_keysym(event.key()) {
                         match *key {
                             keysyms::KEY_Escape => {
@@ -179,7 +181,6 @@ fn test_gatherer() {
                             _ => {}
                         }
                     }
-                    */
                 }
                 InputEvent::PointerMotion { seat: _, event } => {
                     println!("{:#?}", event);
@@ -219,4 +220,9 @@ fn test_gatherer() {
             running = false;
         }
     }
+}
+
+#[test]
+fn test_automatic_layout_detection() {
+    println!("{}", KeyboardDecoder::detect_keyboard_layout().unwrap());
 }
