@@ -69,8 +69,8 @@ fn test_raw()
             InputEvent::SeatChanged(seat) => {println!("Seat changed: {:#?}",seat);}
             InputEvent::SeatRemoved(seat) => {println!("Seat removed: {:#?}",seat);}
             InputEvent::Keyboard { seat: _, event } => {
-                //println!("KEYBOARD_EVENT_DETECTED");
-                println!("{:#?}", KeyboadDecoder::decode(event.key()));
+                println!("KEYBOARD_EVENT_DETECTED");
+                //println!("{:#?}", KeyboadDecoder::decode(event.key()));
             }
             InputEvent::PointerMotion { seat: _, event } => {
                 println!("{:#?}", event);
@@ -125,8 +125,8 @@ fn test_gatherer()
             InputEvent::SeatChanged(seat) => {println!("Seat changed: {:#?}",seat);}
             InputEvent::SeatRemoved(seat) => {println!("Seat removed: {:#?}",seat);}
             InputEvent::Keyboard { seat: _, event } => {
-                //println!("KEYBOARD_EVENT_DETECTED");
-                println!("{:#?}", KeyboadDecoder::decode(event.key()));
+                println!("KEYBOARD_EVENT_DETECTED");
+                //println!("{:#?}", KeyboadDecoder::decode(event.key()));
             }
             InputEvent::PointerMotion { seat: _, event } => {
                 println!("{:#?}", event);
