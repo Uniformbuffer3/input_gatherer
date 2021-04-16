@@ -21,8 +21,15 @@ pub struct KeyboadDecoder {
     state: xkb::State,
 }
 impl KeyboadDecoder {
-    fn detect_keyboard_layout()->Result<String,()>{
+    fn detect_keyboard_layout_from_env()->Result<String,()>{
+        for (var,value) in std::env::vars()
+        {
+            if var == "XKB_DEFAULT_LAYOUT" {return Ok(value);}
+        }
+        Err(())
+    }
 
+    fn detect_keyboard_layout_from_file()->Result<String,()>{
         let regex = regex::Regex::new(r"\s*XKBLAYOUT\s*=(.+)").unwrap();
 
         let file_data = std::fs::read_to_string("/etc/default/keyboard").unwrap();
@@ -34,6 +41,22 @@ impl KeyboadDecoder {
             };
         }
 
+        return Err(());
+    }
+
+    fn detect_keyboard_layout()->Result<String,()>{
+
+        //Try to detect from env
+        match Self::detect_keyboard_layout_from_env(){
+            Ok(layout)=>return Ok(layout),
+            Err(_)=>{}
+        }
+
+        //Try to detect from file
+        match Self::detect_keyboard_layout_from_file(){
+            Ok(layout)=>return Ok(layout),
+            Err(_)=>{}
+        }
         return Err(());
     }
 
@@ -53,8 +76,6 @@ impl KeyboadDecoder {
 
         // Initializing the xkb state that will be used to decode keystrokes
         let state = xkb::State::new(&keymap);
-
-
 
         Self {
             context,
