@@ -1,5 +1,5 @@
 [package]
-name = "input_manager"
+name = "input_gatherer"
 version = "0.1.0"
 authors = ["Fabio Sgamma <uniformbuffer3@gmail.com>"]
 edition = "2018"
