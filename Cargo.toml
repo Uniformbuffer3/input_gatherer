@@ -7,7 +7,8 @@ edition = "2018"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-smithay = { git = "https://github.com/Smithay/smithay" , features=["backend_libinput","backend_session_logind","backend_udev"], default-features = false}
+smithay = { git = "https://github.com/Smithay/smithay", features = ["backend_libinput","backend_session_logind","backend_udev"], default-features = false}
+#smithay = { version = "0.2.1", features = ["backend_libinput","backend_session_logind","backend_udev"], default-features = false}
 input = { version = "0.5.0", features = ["udev"] }
-xkbcommon = "*"
-regex = "*"
+xkbcommon = "0.4.0"
+regex = "1.4.5"

@@ -11,6 +11,10 @@ use smithay::{
 
 use xkbcommon::xkb;
 
+pub use smithay::backend::input::{InputBackend, InputEvent};
+pub use smithay::reexports::input::event::keyboard::KeyboardEventTrait;
+pub use xkb::keysyms;
+
 /**
 This structure initialize the xkb components to decode key strokes to an abstract xkb representation,
 making possible to handle multiple keyboards layouts.
@@ -141,10 +145,6 @@ impl Default for InputGatherer {
 
 #[test]
 fn test_gatherer() {
-    use smithay::backend::input::{InputBackend, InputEvent};
-    use smithay::reexports::input::event::keyboard::KeyboardEventTrait;
-    use xkb::keysyms;
-
     //Creating the gatherer
     let mut gatherer = InputGatherer::new();
     //Creating the keyboard decoder
