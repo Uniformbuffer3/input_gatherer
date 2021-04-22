@@ -9,99 +9,9 @@ use smithay::{
     reexports::input::Libinput,
 };
 
-use xkbcommon::xkb;
 
 pub use smithay::backend::input::{InputBackend, InputEvent};
 pub use smithay::reexports::input::event::keyboard::KeyboardEventTrait;
-pub use xkb::keysyms;
-
-/**
-This structure initialize the xkb components to decode key strokes to an abstract xkb representation,
-making possible to handle multiple keyboards layouts.
-*/
-pub struct KeyboardDecoder {
-    context: xkb::Context,
-    keymap: xkb::Keymap,
-    state: xkb::State,
-}
-impl KeyboardDecoder {
-    fn detect_keyboard_layout_from_env() -> Result<String, ()> {
-        for (var, value) in std::env::vars() {
-            if var == "XKB_DEFAULT_LAYOUT" {
-                return Ok(value);
-            }
-        }
-        Err(())
-    }
-
-    fn detect_keyboard_layout_from_file() -> Result<String, ()> {
-        let regex = regex::Regex::new(r"\s*XKBLAYOUT\s*=(.+)").unwrap();
-
-        let file_data = std::fs::read_to_string("/etc/default/keyboard").unwrap();
-        for line in file_data.lines() {
-            if let Some(capture) = regex.captures(line) {
-                return Ok(capture.get(1).unwrap().as_str().to_string());
-            };
-        }
-        Err(())
-    }
-
-    fn detect_keyboard_layout() -> Result<String, ()> {
-        //Try to detect from env
-        if let Ok(layout) = Self::detect_keyboard_layout_from_env() {
-            return Ok(layout);
-        }
-
-        //Try to detect from file
-        if let Ok(layout) = Self::detect_keyboard_layout_from_file() {
-            return Ok(layout);
-        }
-        Err(())
-    }
-
-    pub fn new() -> Self {
-        // Initializing the xkb context with no flags
-        let context = xkb::Context::new(0);
-
-        // Detecting keyboard layout
-        let keyboard_layout = match Self::detect_keyboard_layout() {
-            Ok(keyboard_layout) => {
-                println!("Detected layout: {}", &keyboard_layout);
-                keyboard_layout
-            }
-            Err(_) => String::from(""),
-        };
-
-        // Initializing the keymap using empty values ("").
-        // This will make xkb detect automatically the system keymap.
-        let keymap = xkb::Keymap::new_from_names(&context, "", "", &keyboard_layout, "", None, 0)
-            .expect("Fauled to create keymap");
-
-        // Initializing the xkb state that will be used to decode keystrokes
-        let state = xkb::State::new(&keymap);
-
-        Self {
-            context,
-            keymap,
-            state,
-        }
-    }
-    /// This function will decode the key into an abstract xkb representation (Keysym).
-    /// The keycode will be increased by 8 because the evdev XKB rules reflect X's
-    /// broken keycode system, which starts at 8
-    pub fn decode_as_keysym(&self, keycode: u32) -> &[xkb::Keysym] {
-        self.state.key_get_syms(keycode + 8)
-    }
-    pub fn decode_as_chars(&self, keycode: u32) -> Vec<char> {
-        self.state.key_get_utf8(keycode + 8).chars().collect()
-    }
-}
-
-impl Default for KeyboardDecoder {
-    fn default() -> Self {
-        Self::new()
-    }
-}
 
 /**
 This structure will initialize the session using AutoSession,
@@ -145,10 +55,12 @@ impl Default for InputGatherer {
 
 #[test]
 fn test_gatherer() {
+    use keystroke_decoder::{KeystrokeDecoder,keysyms};
+
     //Creating the gatherer
     let mut gatherer = InputGatherer::new();
     //Creating the keyboard decoder
-    let keyboard_decoder = KeyboardDecoder::new();
+    let keystroke_decoder = KeystrokeDecoder::new();
 
     let start = std::time::Instant::now();
     let mut running = true;
@@ -167,12 +79,12 @@ fn test_gatherer() {
                 }
                 InputEvent::Keyboard { seat: _, event } => {
                     //Decoding keys into chars
-                    for key in keyboard_decoder.decode_as_chars(event.key()) {
+                    for key in keystroke_decoder.decode_as_chars(event.key()) {
                         println!("{}", key);
                     }
 
                     //Decoding keys into keysym
-                    for key in keyboard_decoder.decode_as_keysym(event.key()) {
+                    for key in keystroke_decoder.decode_as_keysym(event.key()) {
                         match *key {
                             keysyms::KEY_Escape => {
                                 println!("Esc pressed, early exit");
@@ -222,7 +134,4 @@ fn test_gatherer() {
     }
 }
 
-#[test]
-fn test_automatic_layout_detection() {
-    println!("{}", KeyboardDecoder::detect_keyboard_layout().unwrap());
-}
+

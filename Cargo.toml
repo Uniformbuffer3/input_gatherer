@@ -8,7 +8,7 @@ edition = "2018"
 
 [dependencies]
 smithay = { git = "https://github.com/Smithay/smithay", features = ["backend_libinput","backend_session_logind","backend_udev"], default-features = false}
-#smithay = { version = "0.2.1", features = ["backend_libinput","backend_session_logind","backend_udev"], default-features = false}
 input = { version = "0.5.0", features = ["udev"] }
-xkbcommon = "0.4.0"
-regex = "1.4.5"
+
+[dev-dependencies]
+keystroke_decoder = { version = "*", git = "https://github.com/Uniformbuffer3/keystroke_decoder", branch = "main" }
