@@ -7,8 +7,8 @@ edition = "2018"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-smithay = { git = "https://github.com/Smithay/smithay", features = ["backend_libinput","backend_session_logind","backend_udev"], default-features = false}
+smithay = {rev = "243d2d8b38fafc4251965c43b3c4afd9c7bf1b77", git = "https://github.com/Smithay/smithay", features = ["backend_libinput","backend_session_logind","backend_udev"], default-features = false}
 input = { version = "0.5.0", features = ["udev"] }
 
 [dev-dependencies]
-keystroke_decoder = { version = "*", git = "https://github.com/Uniformbuffer3/keystroke_decoder", branch = "main" }
+keystroke_decoder = { git = "https://github.com/Uniformbuffer3/keystroke_decoder", branch = "v0.1.0" }

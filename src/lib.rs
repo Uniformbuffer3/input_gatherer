@@ -55,12 +55,12 @@ impl Default for InputGatherer {
 
 #[test]
 fn test_gatherer() {
-    use keystroke_decoder::{KeystrokeDecoder,keysyms};
+    use keystroke_decoder::*;
 
     //Creating the gatherer
     let mut gatherer = InputGatherer::new();
     //Creating the keyboard decoder
-    let keystroke_decoder = KeystrokeDecoder::new();
+    let mut keystroke_decoder = KeystrokeDecoder::new();
 
     let start = std::time::Instant::now();
     let mut running = true;
@@ -78,15 +78,18 @@ fn test_gatherer() {
                     println!("Seat removed: {:#?}", seat);
                 }
                 InputEvent::Keyboard { seat: _, event } => {
+                    // Decoding keystrokes
+                    let keystrokes = keystroke_decoder.decode(event.key());
+
                     //Decoding keys into chars
-                    for key in keystroke_decoder.decode_as_chars(event.key()) {
+                    for key in keystrokes.as_chars() {
                         println!("{}", key);
                     }
-
                     //Decoding keys into keysym
-                    for key in keystroke_decoder.decode_as_keysym(event.key()) {
-                        match *key {
-                            keysyms::KEY_Escape => {
+                    for key_and_direction in keystrokes.as_keysym() {
+                        println!("{:#?}",&key_and_direction);
+                        match key_and_direction {
+                            (keysyms::KEY_Escape,KeyDirection::Up) => {
                                 println!("Esc pressed, early exit");
                                 running = false;
                             }
